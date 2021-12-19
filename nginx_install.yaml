@@ -1,0 +1,52 @@
+---
+- hosts: 51.250.0.36 
+  become: yes
+
+  tasks:
+  - name: install nginx
+    ansible.builtin.apt:
+      name: nginx
+      state: present
+  - name: copy config nginx
+    ansible.builtin.copy:
+      src: /nginx-ansible/file_data/nginx.conf
+      dest: /etc/nginx/sites-available/nginx.conf
+      force: yes
+      backup: yes
+  - name: copy my.cet
+    ansible.builtin.copy:
+      src: file_data/ssl/devops.nginx.crt
+      dest: /ssl/
+      force: yes
+      backup: yes
+  - name: copy key
+    ansible.builtin.copy:
+      src: file_data/ssl/devops.key
+      dest: /ssl/
+      force: yes
+      mode: '644'
+      backup: yes
+  - name: clean sites
+    ansible.builtin.file:
+      path: /etc/nginx/sites-enabled
+      state: absent
+  - name: create sites
+    ansible.builtin.file:
+      path: /etc/nginx/sites-enabled
+      state: directory   
+  - name: create a symbolic link
+    ansible.builtin.file:
+      src: /etc/nginx/sites-available/nginx.conf
+      dest: /etc/nginx/sites-enabled/nginx.conf
+      force: yes
+      state: link
+  - name: copy index.html
+    ansible.builtin.copy:
+      src: file_data/index.html
+      dest: /var/www/html/
+      force: yes
+  - name: restart nginx
+    ansible.builtin.service:
+      name: nginx
+      enabled: yes
+      state: restarted
